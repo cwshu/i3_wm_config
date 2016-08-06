@@ -9,11 +9,31 @@
 #
 # Please see http://i3wm.org/docs/userguide.html for a complete reference!
 
+### user-defined settings ###
+
 set $mod Mod4
+set $home /home/<username>
+set $font_size 14
+
+set $screen_lock_image /home/<username>/i3_wm_config/screen_lock.png
+
+# app shortcut launcher
+set $web_browser chromium
+set $file_manager pcmanfm-qt
+
+# bg image by feh
+set $bg_image_mode --bg-max
+set $bg_image_path /home/<username>/bg/<image_name>
+
+# script path
+set $ws_control /home/<username>/i3_wm_config/i3-workspace-control.py
+set $touchpad_toggle /home/<username>/i3_wm_config/touchpad_toggle.sh
+
+### general settings ###
 
 # Font for window titles. Will also be used by the bar unless a different font
 # is used in the bar {} block below.
-font pango:monospace 8
+font pango:monospace $font_size
 
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
@@ -26,8 +46,13 @@ font pango:monospace 8
 # X core fonts rendering does not support right-to-left and this being a bitmap
 # font, it doesn’t scale on retina/hidpi displays.
 
+# default workspace/container layout
+workspace_layout tabbed
+
 # Use Mouse+$mod to drag floating windows to their wanted position
 floating_modifier $mod
+
+### shortcuts ###
 
 # start a terminal
 bindsym $mod+Return exec i3-sensible-terminal
@@ -36,11 +61,13 @@ bindsym $mod+Return exec i3-sensible-terminal
 bindsym $mod+Shift+q kill
 
 # start dmenu (a program launcher)
-bindsym $mod+d exec dmenu_run
+bindsym $mod+d exec dmenu_run -fn 'monospace-$font_size'
 # There also is the (new) i3-dmenu-desktop which only displays applications
 # shipping a .desktop file. It is a wrapper around dmenu, so you need that
 # installed.
 # bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
+bindsym $mod+p exec --no-startup-id rofi -show run -font "monospace 16" -fg "#505050" -bg "#000000" -hlfg "#ffb964" -hlbg "#000000" -o 85
+
 
 # change focus
 bindsym $mod+j focus left
@@ -116,6 +143,17 @@ bindsym $mod+Shift+8 move container to workspace 8
 bindsym $mod+Shift+9 move container to workspace 9
 bindsym $mod+Shift+0 move container to workspace 10
 
+# switch workspace/move focused container to workspace with 4 direction support
+bindsym $mod+Ctrl+Up exec $ws_control go up
+bindsym $mod+Ctrl+Down exec $ws_control go down
+bindsym $mod+Ctrl+Left exec $ws_control go left
+bindsym $mod+Ctrl+Right exec $ws_control go right
+
+bindsym $mod+Ctrl+Shift+Up exec $ws_control move up
+bindsym $mod+Ctrl+Shift+Down exec $ws_control move down
+bindsym $mod+Ctrl+Shift+Left exec $ws_control move left
+bindsym $mod+Ctrl+Shift+Right exec $ws_control move right
+
 # reload the configuration file
 bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
@@ -153,4 +191,47 @@ bindsym $mod+r mode "resize"
 # finds out, if available)
 bar {
         status_command i3status
+        tray_output primary
+}
+
+# screensaver & hibernate
+# set $Locker i3lock && sleep 1
+set $Locker i3lock -i $screen_lock_image && sleep 1
+set $mode_system System (l) lock, (s) suspend, (h) hibernate
+
+mode "$mode_system" {
+    bindsym l exec --no-startup-id $Locker, mode "default"
+    bindsym s exec --no-startup-id $Locker && systemctl suspend, mode "default"
+    bindsym h exec --no-startup-id $Locker && systemctl hibernate, mode "default"
+
+    # back to normal: Enter or Escape
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+
+bindsym $mod+Pause mode "$mode_system"
+
+# background image
+exec_always --no-startup-id feh $bg_image_mode $bg_image_path
+
+# screenshot
+bindsym Print exec scrot '%Y-%m-%d_%T_scrot.png' -e 'mv $f ~/Pictures/screenshots/'
+
+# volume
+bindsym XF86AudioMute exec pulseaudio-ctl mute
+bindsym XF86AudioLowerVolume exec pulseaudio-ctl down 5
+bindsym XF86AudioRaiseVolume exec pulseaudio-ctl up 5
+# touchpad
+bindsym XF86TouchpadToggle exec $touchpad_toggle
+
+# launcher
+set $mode_launcher Launch: [w]eb browser [f]ile manager
+bindsym $mod+o mode "$mode_launcher"
+
+mode "$mode_launcher" {
+    bindsym w exec $web_browser, mode "default"
+    bindsym f exec $file_manager, mode "default"
+
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
 }
